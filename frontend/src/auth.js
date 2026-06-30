@@ -1,37 +1,48 @@
-// Petit helper d'authentification (point de départ — adaptez-le à votre app).
-// Il parle au Core NestJS (`backend/`) : login, stockage du token, fetch authentifié.
+const API_URL = 'http://localhost:3000'; // L'URL de ton backend NestJS
 
-const API = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
-const TOKEN_KEY = 'hackathon_token'
+export const auth = {
+  // 1. Connexion
+  async login(username, password) {
+    const response = await fetch(`${API_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
 
-export async function login(username, password) {
-  const res = await fetch(`${API}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password }),
-  })
-  if (!res.ok) throw new Error('Identifiants invalides')
-  const data = await res.json()
-  localStorage.setItem(TOKEN_KEY, data.accessToken)
-  return data.user
-}
+    if (!response.ok) {
+      throw new Error('Identifiants incorrects');
+    }
 
-export function logout() {
-  localStorage.removeItem(TOKEN_KEY)
-}
+    const data = await response.json();
+    // On sauvegarde le token JWT renvoyé par NestJS
+    if (data.access_token) {
+      localStorage.setItem('token', data.access_token);
+    }
+    return data.user; // Contient le username et le role (ex: professional)
+  },
 
-export function getToken() {
-  return localStorage.getItem(TOKEN_KEY)
-}
+  // 2. Récupérer le profil de l'utilisateur connecté via le token
+  async getMe() {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
 
-// fetch authentifié : ajoute automatiquement `Authorization: Bearer <token>`.
-export async function authFetch(path, options = {}) {
-  const token = getToken()
-  return fetch(`${API}${path}`, {
-    ...options,
-    headers: {
-      ...(options.headers ?? {}),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-  })
-}
+    const response = await fetch(`${API_URL}/auth/me`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+    });
+
+    if (!response.ok) {
+      this.logout();
+      return null;
+    }
+
+    return response.json();
+  },
+
+  // 3. Déconnexion
+  logout() {
+    localStorage.removeItem('token');
+  }
+};

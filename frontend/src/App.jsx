@@ -1,111 +1,112 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import Login from './Login.jsx'
-import './App.css'
+import React, { useState, useEffect } from 'react';
+import VideoReviewer from './components/VideoReviewer';
+import VideoSelection from './components/VideoSelection'; // Importation de l'écran de sélection
+import Login from './Login';
+import { auth } from './auth';
+import './App.css';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [user, setUser] = useState(null);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [selectedVideo, setSelectedVideo] = useState(null); // État pour la vidéo active
 
+  useEffect(() => {
+    async function verifyUser() {
+      const loggedInUser = await auth.getMe();
+      if (loggedInUser) {
+        setUser(loggedInUser);
+      }
+      setCheckingAuth(false);
+    }
+    verifyUser();
+  }, []);
+
+  const handleLoginSuccess = (userData) => {
+    setUser(userData);
+  };
+
+  const handleLogout = () => {
+    auth.logout();
+    setUser(null);
+    setSelectedVideo(null);
+  };
+
+  if (checkingAuth) {
+    return (
+      <div style={{ backgroundColor: '#0a0a0a', height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#fff' }}>
+        Chargement du Studio...
+      </div>
+    );
+  }
+
+  // 1. SI PAS CONNECTÉ : Écran de connexion
+  if (!user) {
+    return (
+      <div style={{ backgroundColor: '#0a0a0a', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Login onLoginSuccess={handleLoginSuccess} />
+      </div>
+    );
+  }
+
+  // 2. CORPS DE L'APPLICATION (CONNECTÉ)
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <div style={{ backgroundColor: '#0a0a0a', minHeight: '100vh', width: '100%', margin: 0, padding: 0, boxSizing: 'border-box' }}>
+      {/* BARRE DE NAVIGATION STYLE NETFLIX */}
+      <nav style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '15px 30px',
+        backgroundColor: '#111',
+        borderBottom: '1px solid #1f1f1f'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <span style={{ fontSize: '20px', fontWeight: 'bold', color: '#E50914', letterSpacing: '1px', cursor: 'pointer' }} onClick={() => setSelectedVideo(null)}>
+            STUDIOFLIX
+          </span>
+          <span style={{ color: '#888', fontSize: '12px', borderLeft: '1px solid #333', paddingLeft: '10px' }}>
+            {user.role === 'professional' ? 'Espace Professionnel' : 'Espace Collaborateur'}
+          </span>
+          {selectedVideo && (
+            <button 
+              onClick={() => setSelectedVideo(null)} 
+              style={{ backgroundColor: '#222', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+            >
+              ⬅️ Changer de vidéo
+            </button>
+          )}
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <div style={{ fontSize: '13px', color: '#fff', backgroundColor: '#222', padding: '6px 14px', borderRadius: '4px' }}>
+            👤 {user.username} <span style={{ color: '#646cff', fontSize: '11px' }}>({user.role})</span>
+          </div>
+          <button 
+            onClick={handleLogout}
+            style={{ background: 'none', border: '1px solid #444', color: '#aaa', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+          >
+            Déconnexion
+          </button>
         </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+      </nav>
 
-      <div className="ticks"></div>
-
-      <Login />
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg className="button-icon" role="presentation" aria-hidden="true">
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg className="button-icon" role="presentation" aria-hidden="true">
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg className="button-icon" role="presentation" aria-hidden="true">
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg className="button-icon" role="presentation" aria-hidden="true">
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      {/* ROUTING INTERNE SELON LA SÉLECTION VIDÉO */}
+      <main style={{ padding: '20px 30px', boxSizing: 'border-box', width: '100%' }}>
+        {!selectedVideo ? (
+          <VideoSelection 
+            currentUser={user} 
+            onSelectVideo={(url) => setSelectedVideo(url)} 
+          />
+        ) : (
+          <VideoReviewer 
+            videoSrc={selectedVideo} 
+            currentUser={user}
+            sessionId="session_demo_pole1"
+          />
+        )}
+      </main>
+    </div>
+  );
 }
 
-export default App
+export default App;
