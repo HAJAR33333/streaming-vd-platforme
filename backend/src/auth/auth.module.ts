@@ -4,6 +4,7 @@ import type { StringValue } from 'ms'
 import { AuthController } from './auth.controller'
 import { AuthService } from './auth.service'
 import { AuthGuard } from './auth.guard'
+import { EmailService } from './email.service'
 import { UsersService } from './users.service'
 
 // 🔐 Brique d'IDENTITÉ partagée — point de départ, PAS l'objet de la note.
@@ -20,7 +21,7 @@ import { UsersService } from './users.service'
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, UsersService, AuthGuard],
+  providers: [AuthService, UsersService, AuthGuard, EmailService],
   exports: [AuthGuard, JwtModule],
 })
 export class AuthModule {}
