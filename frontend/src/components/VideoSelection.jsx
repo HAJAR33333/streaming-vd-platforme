@@ -3,13 +3,13 @@ import React, { useState } from 'react';
 export default function VideoSelection({ currentUser, onSelectVideo }) {
   // Liste fictive de vidéos en adéquation avec ton multi-tenancy (R-01)
   const [videos, setVideos] = useState([
-    { id: 'v1', title: 'Publicité Campagne Été 2026', duration: '01:30', url: '/video.mp4', owner: 'Alice (Pro)' },
-    { id: 'v2', title: 'Teaser Produit V2 (Version Brut)', duration: '00:45', url: 'https://www.w3schools.com/html/mov_bbb.mp4', owner: 'Alice (Pro)' }
+    { id: 'v1', title: 'POC Parc des Princes V1', duration: '02:00', url: '/sample.mp4', owner: 'StudioFlix' },
+    { id: 'v2', title: 'Teaser Produit V2 (Version Brut)', duration: '00:45', url: 'https://www.w3schools.com/html/mov_bbb.mp4', owner: 'StudioFlix' }
   ]);
 
   const [dragActive, setDragActive] = useState(false);
 
-  // Simulation de l'upload pour le rôle Professionnel
+  // Simulation de l'upload pour le rôle administrateur
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -18,8 +18,8 @@ export default function VideoSelection({ currentUser, onSelectVideo }) {
       id: `v_${Date.now()}`,
       title: file.name.replace(/\.[^/.]+$/, ""), // Enlève l'extension
       duration: '--:--',
-      url: '/video.mp4', // On réutilise ta vidéo locale pour la démo
-      owner: currentUser.username
+      url: URL.createObjectURL(file),
+      owner: currentUser.email ?? currentUser.username
     };
 
     setVideos([newVideo, ...videos]);
@@ -29,16 +29,16 @@ export default function VideoSelection({ currentUser, onSelectVideo }) {
     <div style={{ color: '#fff', fontFamily: 'sans-serif', maxWidth: '1000px', margin: '0 auto', padding: '20px' }}>
       
       <div style={{ marginBottom: '30px' }}>
-        <h2 style={{ margin: 0, fontSize: '24px', fontWeight: '600' }}>Bonjour, {currentUser.username} 👋</h2>
+        <h2 style={{ margin: 0, fontSize: '24px', fontWeight: '600' }}>Bonjour, {currentUser.username}</h2>
         <p style={{ color: '#888', margin: '5px 0 0 0', fontSize: '14px' }}>
-          {currentUser.role === 'professional' 
+          {currentUser.role === 'admin'
             ? 'Gérez vos projets vidéos et lancez une session de révision collaborative.' 
             : 'Sélectionnez une vidéo assignée par votre agence pour commencer les annotations.'}
         </p>
       </div>
 
-      {/* ZONE D'UPLOAD : UNIQUEMENT POUR LE PROFESSIONNEL */}
-      {currentUser.role === 'professional' && (
+      {/* Zone d'upload : uniquement pour l'administrateur */}
+      {currentUser.role === 'admin' && (
         <div 
           style={{
             border: '2px dashed #333',
@@ -63,7 +63,7 @@ export default function VideoSelection({ currentUser, onSelectVideo }) {
             style={{ display: 'none' }} 
           />
           <label htmlFor="video-upload" style={{ cursor: 'pointer' }}>
-            <span style={{ fontSize: '40px', display: 'block', marginBottom: '10px' }}>🎬</span>
+            <span style={{ fontSize: '13px', color: '#E50914', display: 'block', marginBottom: '10px', fontWeight: '700', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Upload vidéo</span>
             <span style={{ fontWeight: '600', display: 'block', color: '#fff' }}>Glissez-déposez une nouvelle vidéo</span>
             <span style={{ fontSize: '13px', color: '#666', display: 'block', marginTop: '5px' }}>ou cliquez pour parcourir vos fichiers (MP4, MOV)</span>
           </label>
@@ -72,14 +72,14 @@ export default function VideoSelection({ currentUser, onSelectVideo }) {
 
       {/* LISTE DES VIDÉOS DISPONIBLES */}
       <h3 style={{ borderBottom: '1px solid #222', paddingBottom: '10px', marginBottom: '20px', fontSize: '18px' }}>
-        {currentUser.role === 'professional' ? 'Vos projets en cours' : 'Vidéos assignées'}
+        {currentUser.role === 'admin' ? 'Vos projets en cours' : 'Vidéos assignées'}
       </h3>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
         {videos.map((vid) => (
           <div 
             key={vid.id}
-            onClick={() => onSelectVideo(vid.url)}
+            onClick={() => onSelectVideo(vid)}
             style={{
               backgroundColor: '#181818',
               borderRadius: '8px',
@@ -93,7 +93,7 @@ export default function VideoSelection({ currentUser, onSelectVideo }) {
           >
             {/* Miniature Fictive */}
             <div style={{ height: '150px', backgroundColor: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-              <span style={{ fontSize: '30px' }}>📺</span>
+              <span style={{ fontSize: '13px', color: '#777', fontWeight: '700', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Vidéo</span>
               <span style={{ position: 'absolute', bottom: '8px', right: '8px', backgroundColor: 'rgba(0,0,0,0.8)', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold' }}>
                 {vid.duration}
               </span>

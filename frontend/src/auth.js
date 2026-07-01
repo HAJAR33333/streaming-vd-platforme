@@ -1,29 +1,50 @@
-const API_URL = 'http://localhost:3000'; // L'URL de ton backend NestJS
+const API_URL = 'http://localhost:3001'; // L'URL du backend NestJS
+const TOKEN_KEY = 'studioflix_token';
+
+function storeSession(data) {
+  if (data.accessToken) {
+    localStorage.setItem(TOKEN_KEY, data.accessToken);
+  }
+
+  return data.user;
+}
 
 export const auth = {
   // 1. Connexion
-  async login(username, password) {
+  async login(email, password) {
     const response = await fetch(`${API_URL}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ email, password }),
     });
 
     if (!response.ok) {
-      throw new Error('Identifiants incorrects');
+      const error = await response.json().catch(() => null);
+      throw new Error(error?.message || 'Identifiants incorrects');
     }
 
     const data = await response.json();
-    // On sauvegarde le token JWT renvoyé par NestJS
-    if (data.access_token) {
-      localStorage.setItem('token', data.access_token);
+    return storeSession(data);
+  },
+
+  async register(email, password, role = 'user') {
+    const response = await fetch(`${API_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, role }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => null);
+      throw new Error(error?.message || 'Inscription impossible');
     }
-    return data.user; // Contient le username et le role (ex: professional)
+
+    return response.json();
   },
 
   // 2. Récupérer le profil de l'utilisateur connecté via le token
   async getMe() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem(TOKEN_KEY);
     if (!token) return null;
 
     const response = await fetch(`${API_URL}/auth/me`, {
@@ -43,6 +64,6 @@ export const auth = {
 
   // 3. Déconnexion
   logout() {
-    localStorage.removeItem('token');
+    localStorage.removeItem(TOKEN_KEY);
   }
 };
